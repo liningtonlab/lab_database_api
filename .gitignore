@@ -1,0 +1,12 @@
+# Local instance variables
+.flaskenv
+instance/
+.vscode/
+.DS_Store
+
+# Testing + Coverage
+cover/
+.coverage
+__pycache__/
+.pytest_cache/
+.noseids

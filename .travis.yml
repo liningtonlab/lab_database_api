@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.7"
+env:
+  - FLASK_APP=server.py FLASK_ENV=testing SERVER_NAME="localhost:5000"
+matrix:
+  include:
+    - name: Test API with SQLite database
+      env: TEST_DATABASE_URL="sqlite:///:memory:"
+    - name: Test API with MySQL database
+      env: TEST_DATABASE_URL="mysql+pymysql://travis@127.0.0.1/test_db"
+      before_install: mysql -e "CREATE DATABASE IF NOT EXISTS test_db;"
+install:
+  - make build
+script:
+  - make test
