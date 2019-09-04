@@ -3,23 +3,23 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
-from api.models import SampleType, get_all, get_one
+from api.models import Media, get_all, get_one
 
 
-class SampleTypes(Resource):
+class MediaEP(Resource):
     def get(self, **kwargs):
         id_ = kwargs.get('id')
         embed = get_embedding(request.args.get('embed'))
-        if not validate_embed(SampleType, embed):
+        if not validate_embed(Media, embed):
             abort(404)
         if id_:
             try:
-                res = get_one(SampleType, id_)
+                res = get_one(Media, id_)
             except NoResultFound as e:
                 abort(404, e)
             return jsonify_sqlalchemy(res, embed=embed)
         else:
-            return jsonify_sqlalchemy(get_all(SampleType), embed=embed)
+            return jsonify_sqlalchemy(get_all(Media), embed=embed)
 
     def put(self, **kwargs):
         pass

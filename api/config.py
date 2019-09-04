@@ -7,7 +7,7 @@ class Config(object):
     SECRET_KEY = os.getenv('SECRET')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SERVER_NAME = os.getenv('SERVER_NAME', "localhost:5000")
+    BASE_URL = os.getenv('BASE_URL', "localhost")
 
 
 class DevelopmentConfig(Config):

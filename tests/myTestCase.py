@@ -1,6 +1,7 @@
 import unittest
 
 from api.app import create_app
+from api.models import session_scope
 from api.common.sql_models import Base
 from api.db import Session
 
@@ -16,5 +17,5 @@ class MyTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        Session.remove()
+    #     Session.remove()
         Base.metadata.drop_all(bind=cls.app.engine)

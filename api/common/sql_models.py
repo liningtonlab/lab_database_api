@@ -46,10 +46,19 @@ class Sample(Base):
     dive_site = relationship("DiveSite", backref="samples")
     divers = relationship("Diver", secondary=sample_diver, backref="samples")
     sample_type_id = Column(Integer, ForeignKey("sample_type.id"))
-    sample_type = relationship("SampleType")
+    sample_type = relationship("SampleType", backref="samples")
     isolates = relationship("Isolate", backref="sample")
     permit_id = Column(Integer, ForeignKey("permit.id"))
-    permit = relationship("Permit")
+    permit = relationship("Permit", backref="samples")
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Sample) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Sample Type Table ORM
@@ -59,6 +68,15 @@ class SampleType(Base):
     name = Column(String(45), nullable=False)
     description = Column(Text)
     notes = Column(Text)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, SampleType) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Dive site Table ORM
@@ -70,13 +88,22 @@ class DiveSite(Base):
     lon = Column(Float, nullable=False)
     notes = Column(Text)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, DiveSite) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 # Diver Table ORM
 class Diver(Base):
     """This class represents the diver table.
 
     More accurately described as collector...
-    
+
     """
     __tablename__ = "diver"
     id = Column(Integer, primary_key=True)
@@ -86,6 +113,14 @@ class Diver(Base):
     email = Column(String(255))
     notes = Column(Text)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Diver) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Permit Table ORM
@@ -99,6 +134,15 @@ class Permit(Base):
     notes = Column(Text)
     file_dir = Column(String(45))
     file_name = Column(String(45))
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Permit) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Isolate Table ORM
@@ -118,9 +162,18 @@ class Isolate(Base):
     media_id = Column(Integer, ForeignKey("media.id"))
     media = relationship("Media")
     sample_id = Column(Integer, ForeignKey("sample.id"))
-    extract = relationship("Extract", backref="isolate")
-    stock = relationship("IsolateStock",
+    extracts = relationship("Extract", backref="isolate")
+    stocks = relationship("IsolateStock",
                          backref=backref("isolate", uselist=False))
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Isolate) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Strain Stock Table ORM
@@ -137,6 +190,15 @@ class IsolateStock(Base):
     insert_date = Column(DateTime)
     # ForeignKeys and relationships
     isolate_id = Column(Integer, ForeignKey("isolate.id"))
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, IsolateStock) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Extract Table ORM
@@ -168,6 +230,25 @@ class Extract(Base):
     library = relationship("Library", backref="extracts")
     fractions = relationship("Fraction", back_populates="extract")
 
+    @property
+    def name(self):
+        try:
+            return "RL{}-{:04d}".format(
+                self.library.abbrev,
+                self.number,
+            )
+        except AttributeError:
+            return None
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Extract) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 # Fraction Table ORM
 class Fraction(Base):
@@ -179,12 +260,32 @@ class Fraction(Base):
 
     @hybrid_property
     def name(self):
-        ex = self.extract
-        return "RL{}-{:04d}{}".format(
-            ex.library.abbrev,
-            ex.number,
-            self.code
-        )
+        try:
+            ex = self.extract
+            return "RL{}-{:04d}{}".format(
+                ex.library.abbrev,
+                ex.number,
+                self.code
+            )
+        except AttributeError:
+            None
+
+    @hybrid_property
+    def library(self):
+        try:
+            ex = self.extract
+            return ex.library
+        except AttributeError:
+            None
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Fraction) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Media Table ORM
@@ -195,6 +296,15 @@ class Media(Base):
     notes = Column(Text)
     recipe = relationship("MediaRecipe",
                           backref=backref("media", uselist=False))
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Media) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Media Recipe Table ORM
@@ -207,6 +317,15 @@ class MediaRecipe(Base):
     unit = Column(String(255), nullable=False)
     notes = Column(Text)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, MediaRecipe) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 # Library Table ORM
 class Library(Base):
@@ -217,26 +336,56 @@ class Library(Base):
     description = Column(String(255))
     notes = Column(Text)
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, Library) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 # Screening Plate ORM
 class ScreenPlate(Base):
     __tablename__ = "screen_plate"
     id = Column(Integer, primary_key=True)
     name = Column(String(45))
+    htcb_name = Column(String(45))
+    well_format = Column(Integer)
     notes = Column(Text)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, ScreenPlate) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # Fraction >-< Screening Plate ORM
 class FractionScreenPlate(Base):
     __tablename__ = "fraction_screen_plate"
+    id = Column(Integer, primary_key=True)
     fraction_id = Column(Integer, ForeignKey("fraction.id"),
-                         primary_key=True)
+                         nullable=False)
     fraction = relationship("Fraction")
     screen_plate_id = Column(Integer, ForeignKey("screen_plate.id"),
-                             primary_key=True)
+                             nullable=False)
     screen_plate = relationship("ScreenPlate")
     well = Column(String(45))
     notes = Column(Text)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id}>"
+
+    def __eq__(self, other):
+        return isinstance(other, ScreenPlate) and other.id == self.id
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # # Should be a singleton object for instantiating DB connection

@@ -1,20 +1,25 @@
-from flask import abort
+from flask import abort, request
+from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
-from api.common.utils import jsonify_sqlalchemy
-from api.models import get_one, get_all, Diver
-from flask_restful import Resource
+from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
+from api.models import Diver, get_all, get_one
 
 
 class Divers(Resource):
     def get(self, **kwargs):
         id_ = kwargs.get('id')
-        try:
-            if id_:
-                return jsonify_sqlalchemy(get_one(Diver, id_))
-        except NoResultFound:
+        embed = get_embedding(request.args.get('embed'))
+        if not validate_embed(Diver, embed):
             abort(404)
-        return jsonify_sqlalchemy(get_all(Diver))
+        if id_:
+            try:
+                res = get_one(Diver, id_)
+            except NoResultFound as e:
+                abort(404, e)
+            return jsonify_sqlalchemy(res, embed=embed)
+        else:
+            return jsonify_sqlalchemy(get_all(Diver), embed=embed)
 
     def put(self, **kwargs):
         pass

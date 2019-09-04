@@ -7,8 +7,10 @@ from flask import abort, jsonify
 from api.common.exc import ValidationException
 from api.common.sql_models import Base
 from api.config import app_config
-from api.models import (Diver, DiveSite, Library, Permit,
-                        Sample, SampleType, ScreenPlate)
+from api.common.sql_models import (Diver, DiveSite, Extract, Fraction,
+                                   FractionScreenPlate, Isolate, IsolateStock,
+                                   Library, Media, MediaRecipe, Permit, Sample,
+                                   SampleType, ScreenPlate)
 
 ENDPOINT_MAP = {
     'sample': 'samples',
@@ -33,30 +35,33 @@ MODEL_MAP = {
     'dive_site': DiveSite,
     'diver': Diver,
     'permit': Permit,
-    # 'isolate': 
-    # 'isolate_stock': 
-    # 'extract': 
-    # 'fraction': 
-    # 'media': 
-    # 'media_recipe': 
+    'isolate': Isolate,
+    'isolate_stock': IsolateStock,
+    'extract': Extract,
+    'fraction': Fraction,
+    'media': Media,
+    'media_recipe': MediaRecipe,
     'library': Library,
     'screen_plate': ScreenPlate,
-    # 'fraction_screen_plate': 
+    'fraction_screen_plate': FractionScreenPlate
 }
 
 TABLE_MAP = {v:k for k,v in ENDPOINT_MAP.items()}
 
 CONF = app_config[os.getenv('FLASK_ENV', 'development')]
-BASE_URL = f"http://{CONF.SERVER_NAME}"
+BASE_URL = f"http://{CONF.BASE_URL}:5000/api/v1"
 
-def validate_embedding(embed, relationships, endpoint):
+
+def get_embedding(embed):
     if not embed:
         return []
-    embed_split = embed.split(',')
-    for e in embed_split:
-        if e not in relationships:
-            raise ValidationError(f'{e} - not related to {endpoint}')
-    return embed_split
+    return embed.split(',')
+
+def validate_embed(Doa, embed):
+    relationships = get_relationships(Doa)
+    # Test if embed is a subset of relationships
+    return set(embed) <= set(relationships) 
+
 
 def get_relationships(Doa):
     assert issubclass(Doa, Base)
@@ -73,6 +78,10 @@ def get_relationships(Doa):
 
 def row2dict(row):
     result = {}
+    if isinstance(row, Extract) or isinstance(row, Fraction):
+        extra = ['name']
+    else:
+        extra = []
     # Serialize table without foreign keys
     for c in row.__table__.columns:
         # Remove metadata fields
@@ -88,31 +97,53 @@ def row2dict(row):
             result[c.name] = r.isoformat()
         else:
             result[c.name] = r
+    for e in extra:
+        r = getattr(row, e)
+        result[e] = r
+    return result
+
+def media2dict(row):
+    result = {}
+    # Serialize table without foreign keys
+    for c in row.__table__.columns:
+        r = getattr(row, c.name)
+        result[c.name] = r
+    recipe=[]
+    for i in row.recipe:
+        recipe.append({
+            "ingredient": i.ingredient,
+            "amount": i.amount,
+            "unit": i.unit,
+            "notes": i.notes
+        })
+    result['recipe'] = recipe
     return result
 
 
 def serialize_row(row, embed):
     self_ = f"/{ENDPOINT_MAP[row.__table__.name]}/{row.id}"
-    result = row2dict(row)
-    # Serialize relationships as lists of links
-    for rel in row.__mapper__.relationships.keys():
-        try:
-            key = ENDPOINT_MAP[rel]
-        except KeyError:
-            key = rel
-        r = getattr(row, rel)
-        if not isinstance(r, list):
-            r = [r]
-        result[key] = {"links":[f"{BASE_URL+self_}/{key}/{x.id}" for x in r if x]}
-        if key in embed:
-            result[key]["embedded"] = [row2dict(x) for x in r if x]
-        
+    # No embeddings allowed for media
+    # Separate media to serialize to that recipe is included
+    if isinstance(row, Media):
+        result = media2dict(row)
+    else:
+        result = row2dict(row)
+        # Serialize relationships as lists of links
+        for rel in row.__mapper__.relationships.keys():
+            try:
+                key = ENDPOINT_MAP[rel]
+            except KeyError:
+                key = rel
+            r = getattr(row, rel)
+            if not isinstance(r, list):
+                r = [r]
+            result[key] = {"links":[f"{BASE_URL}/{key}/{x.id}" for x in r if x]}
+            if key in embed:
+                result[key]["embedded"] = [row2dict(x) for x in r if x]
     return result
 
 
-# Simple serialization - deprecate in favour of JSON:API spec
 def jsonify_sqlalchemy(res, embed=[]):
-    # ensure result is list for consistent API consumption
     if not isinstance(res, list):
-        res = [res]
+        return serialize_row(res, embed=embed) 
     return [serialize_row(r, embed=embed) for r in res]
