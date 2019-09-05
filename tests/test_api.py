@@ -4,10 +4,34 @@ from tests.myTestCase import MyTestCase
 
 from api.db import Session
 from api.models import (Diver, DiveSite, Extract, Fraction,
-                        FractionScreenPlate, Isolate, IsolateStock, Library,
+                        Isolate, IsolateStock, Library,
                         Media, MediaRecipe, Permit, Sample, SampleType,
                         ScreenPlate, session_scope)
 
+
+class TestApiRoot(MyTestCase):
+
+    def setUp(self):
+        self.client = self.app.test_client()
+
+    def test_api_root(self):
+        expected = [
+            "/api/v1/divers", 
+            "/api/v1/divesites", 
+            "/api/v1/extracts", 
+            "/api/v1/fractions", 
+            "/api/v1/heartbeat", 
+            "/api/v1/isolates", 
+            "/api/v1/libraries", 
+            "/api/v1/media", 
+            "/api/v1/permits", 
+            "/api/v1/samples", 
+            "/api/v1/sampletypes", 
+            "/api/v1/screenplates"
+        ]
+        r = self.client.get('/api/v1/')
+        self.assertIsInstance(r.json, list)
+        self.assertListEqual(r.json, expected)
 
 class TestHeartBeatApi(MyTestCase):
 
@@ -16,7 +40,7 @@ class TestHeartBeatApi(MyTestCase):
             self.client = self.app.test_client()
 
     def test_heartbeat(self):
-        r = self.client.get('/api/v1/')
+        r = self.client.get('/api/v1/heartbeat')
         self.assertEqual(r.status_code, 200)
         self.assertDictEqual(r.json, {})
 

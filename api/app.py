@@ -5,10 +5,9 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from api.config import app_config
 from api.db import init_db
-from api.resources import (Divers, DiveSites, Extracts, Fractions,
-                           FractionScreenPlates, Heartbeat, Isolates,
-                           Libraries, MediaEP, Permits, Samples, SampleTypes,
-                           ScreenPlates)
+from api.resources import (Divers, DiveSites, Extracts, Fractions, Heartbeat,
+                           Isolates, Libraries, MediaEP, Permits, Samples,
+                           SampleTypes, ScreenPlates, Summary)
 
 
 def create_app(config_name):
@@ -20,13 +19,12 @@ def create_app(config_name):
     # TODO: Implement collections
 
     # Simple collections + resources
-    api.add_resource(Heartbeat, '/api/v1/')
+    api.add_resource(Summary, '/api/v1/')
+    api.add_resource(Heartbeat, '/api/v1/heartbeat')
     api.add_resource(Divers, '/api/v1/divers', '/api/v1/divers/<int:id>')
     api.add_resource(DiveSites, '/api/v1/divesites', '/api/v1/divesites/<int:id>')
     api.add_resource(Extracts, '/api/v1/extracts', '/api/v1/extracts/<int:id>')
     api.add_resource(Fractions, '/api/v1/fractions', '/api/v1/fractions/<int:id>')
-    api.add_resource(FractionScreenPlates, '/fractionscreenplates',
-                     '/api/v1/fractionscreenplates/<int:id>')
     api.add_resource(Isolates, '/api/v1/isolates', '/api/v1/isolates/<int:id>')
     api.add_resource(Libraries, '/api/v1/libraries', '/api/v1/libraries/<int:id>')
     api.add_resource(MediaEP, '/api/v1/media', '/api/v1/media/<int:id>')
