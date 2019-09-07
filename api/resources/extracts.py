@@ -5,7 +5,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
 from api.models import Extract, get_all, get_one
 
-from .fields import extract_fields
 
 class Extracts(Resource):
     def get(self, **kwargs):
