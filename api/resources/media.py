@@ -12,7 +12,8 @@ class MediaEP(Resource):
         embed = get_embedding(request.args.get('embed'))
         if not validate_embed(Media, embed):
             abort(404)
-        if id_:
+        # Explicitly check for None incase of 0 id_
+        if id_ != None:
             try:
                 res = get_one(Media, id_)
             except NoResultFound as e:

@@ -5,6 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
 from api.models import Extract, get_all, get_one
 
+from .fields import extract_fields
 
 class Extracts(Resource):
     def get(self, **kwargs):
@@ -12,7 +13,8 @@ class Extracts(Resource):
         embed = get_embedding(request.args.get('embed'))
         if not validate_embed(Extract, embed):
             abort(404)
-        if id_:
+        # Explicitly check for None incase of 0 id_
+        if id_ != None:
             try:
                 res = get_one(Extract, id_)
             except NoResultFound as e:

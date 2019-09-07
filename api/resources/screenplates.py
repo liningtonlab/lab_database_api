@@ -12,7 +12,8 @@ class ScreenPlates(Resource):
         embed = get_embedding(request.args.get('embed'))
         if not validate_embed(ScreenPlate, embed):
             abort(404)
-        if id_:
+        # Explicitly check for None incase of 0 id_
+        if id_ != None:
             try:
                 res = get_one(ScreenPlate, id_)
             except NoResultFound as e:
