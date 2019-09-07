@@ -12,3 +12,5 @@ coverage-html:
 	nosetests tests -v --with-coverage --cover-erase --cover-package=api --cover-branches --cover-html && open cover/index.html
 clean:
 	find . -name '__pycache__' -type d | xargs rm -r && rm -rf .coverage .noseids cover
+deploy:
+	gunicorn -w 4 "api.app:create_app('production')"
