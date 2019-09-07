@@ -8,6 +8,7 @@
 <summary><code>GET /api/v1/samples</code></summary>
 
 `RESULT`
+
 ```
 [
     

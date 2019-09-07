@@ -8,6 +8,7 @@
 <summary><code>Get /api/v1/screenplates</code></summary>
 
 `RESULT`
+
 ```
 [
     
