@@ -8,6 +8,7 @@ This API root resource links to all available resources.
 <summary><code>GET /api/v1/</code></summary>
 
 `RESULT`
+
 ```
 [
   "/api/v1/divers", 
@@ -30,6 +31,7 @@ This API root resource links to all available resources.
 <summary><code>GET /api/v1/heartbeat</code></summary>
 
 `RESULT`
+
 ```
 {}
 ```

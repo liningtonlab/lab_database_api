@@ -6,7 +6,9 @@
 
 <details>
 <summary><code>GET /api/v1/libraries</code></summary>
+
 `RESULT`
+
 ```
 [
     
