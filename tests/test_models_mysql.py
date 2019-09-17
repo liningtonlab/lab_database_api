@@ -1,7 +1,7 @@
 import datetime
 import unittest
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.orm.exc import NoResultFound
 from tests.myTestCase import MyTestCase
 
@@ -127,7 +127,7 @@ class TestLibraryModel(MyTestCase):
             sess.add_all([library_1, library_2])
 
     def test_get_one(self):
-        res = get_one(Library, 1)
+        res = get_one(Library, 'l1')
         self.assertIsInstance(res, Library)
 
     def test_get_all(self):
@@ -142,17 +142,17 @@ class TestLibraryModel(MyTestCase):
                 sess.add(library_bad_name)
 
     def test_bad_abbrev(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(InternalError):
             with session_scope() as sess:
                 sess.add(library_bad_abbrev)
 
     def test_relationship(self):
-        res = get_one(Library, 2)
+        res = get_one(Library, 'l2')
         self.assertIsInstance(res, Library)
         self.assertIsInstance(res.extracts[0], Extract)
 
     def test_bad_relationship(self):
-        res = get_one(Library, 2)
+        res = get_one(Library, 'l2')
         self.assertIsInstance(res, Library)
         # Test a relationship that doesn't exist
         with self.assertRaises(AttributeError):
@@ -505,11 +505,11 @@ class TestExtractModel(MyTestCase):
         self.assertEqual(res.number, None)
         self.assertEqual(res.temp, None)
 
-    def test_emprty_name_property(self):
+    def test_empty_name_property(self):
         # Requires extract with library attached
         res = get_one(Extract, 1)
         self.assertIsInstance(res, Extract)
-        self.assertEqual(res.name, None)
+        self.assertEqual(res.name, 'RLNone-0001')
 
     def test_name_property(self):
         # Requires extract with library attached
@@ -566,7 +566,7 @@ class TestFractionModel(MyTestCase):
         self.assertIsInstance(res, Fraction)
         self.assertIsInstance(res.extract, Extract)
 
-    def test_emprty_name_property(self):
+    def test_empty_name_property(self):
         # Requires extract with library attached
         res = get_one(Fraction, 1)
         self.assertIsInstance(res, Fraction)
@@ -673,17 +673,16 @@ class TestMediaRecipeModel(MyTestCase):
 
 # Define Test FractionScreenPlate
 # and associated relationship
-# FractionScreenPlate REQUIRES Fraction and ScreenPlate
-fsp_fraction = Fraction(id=1)
-fsp_screenplate = ScreenPlate(id=1,name='fraction screen plate screen plate')
-fsp_1 = FractionScreenPlate(id=1, fraction=fsp_fraction, 
-                screen_plate=fsp_screenplate, well='1')
-fsp_bad_fraction = FractionScreenPlate(screen_plate=fsp_screenplate)
-fsp_bad_sp = FractionScreenPlate(fraction=fsp_fraction)
+fsp_fraction = Fraction()
+fsp_screenplate = ScreenPlate(name='fraction screen plate screen plate')
+fsp_1 = FractionScreenPlate(fraction_id=1, 
+                screen_plate_id=1, well='1')
 
 class TestFractionScreenPlateModel(MyTestCase):
 
     def setUp(self):
+        with session_scope() as sess:
+            sess.add_all([fsp_fraction, fsp_screenplate])
         with session_scope() as sess:
             sess.add_all([fsp_1])
 
@@ -702,16 +701,6 @@ class TestFractionScreenPlateModel(MyTestCase):
         self.assertIsInstance(res, FractionScreenPlate)
         self.assertIsInstance(res.fraction, Fraction)
         self.assertIsInstance(res.screen_plate, ScreenPlate)
-
-    def test_bad_fraction(self):
-        with self.assertRaises(IntegrityError):
-            with session_scope() as sess:
-                sess.add(fsp_bad_fraction)
-
-    def test_bad_screenplate(self):
-        with self.assertRaises(IntegrityError):
-            with session_scope() as sess:
-                sess.add(fsp_bad_sp)
 
 
 if __name__ == '__main__':

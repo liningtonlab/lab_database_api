@@ -6,7 +6,7 @@ from api.db import Session
 from api.models import (Diver, DiveSite, Extract, Fraction,
                         Isolate, IsolateStock, Library,
                         Media, MediaRecipe, Permit, Sample, SampleType,
-                        ScreenPlate, session_scope)
+                        ScreenPlate, session_scope, User)
 
 
 class TestApiRoot(MyTestCase):
@@ -176,14 +176,14 @@ class TestLibraryApi(MyTestCase):
         self.assertEqual(len(data), 2, msg=f'{r}')
 
     def test_get_one_first(self):
-        r = self.client.get('/api/v1/libraries/1')
+        r = self.client.get('/api/v1/libraries/tl1')
         self.assertEqual(r.status_code, 200)
         data = r.json
         self.assertIsInstance(data, dict)
         self.assertEqual(data.get('name'), "test library 1")
 
     def test_get_one_second(self):
-        r = self.client.get('/api/v1/libraries/2')
+        r = self.client.get('/api/v1/libraries/tl2')
         self.assertEqual(r.status_code, 200)
         data = r.json
         self.assertIsInstance(data, dict)
@@ -191,7 +191,7 @@ class TestLibraryApi(MyTestCase):
         self.assertEqual(data.get('notes'), "Test")
 
     def test_get_one_invalid(self):
-        r = self.client.get('/api/v1/libraries/3')
+        r = self.client.get('/api/v1/libraries/tl3')
         self.assertEqual(r.status_code, 404)
 
     def test_get_one_bad_query(self):
@@ -199,7 +199,7 @@ class TestLibraryApi(MyTestCase):
         self.assertEqual(r.status_code, 404)
 
     def test_get_one_good_embed_samples(self):
-        r = self.client.get('/api/v1/libraries/1?embed=extracts')
+        r = self.client.get('/api/v1/libraries/tl1?embed=extracts')
         data = r.json
         self.assertIsInstance(data, dict)
         embedded = data.get('extracts').get('embedded')
@@ -207,7 +207,7 @@ class TestLibraryApi(MyTestCase):
         self.assertEqual(len(embedded), 1)
 
     def test_get_one_bad_embed(self):
-        r = self.client.get('/api/v1/libraries/1?embed=BAD')
+        r = self.client.get('/api/v1/libraries/tl1?embed=BAD')
         self.assertEqual(r.status_code, 404)
 
 
@@ -533,7 +533,7 @@ class TestExtractApi(MyTestCase):
         self.assertEqual(r.status_code, 200)
         data = r.json
         self.assertIsInstance(data, dict)
-        self.assertEqual(data.get('name'), None)
+        self.assertEqual(data.get('name'), 'RLNone-0001')
 
     def test_get_one_second(self):
         r = self.client.get('/api/v1/extracts/2')
@@ -638,3 +638,19 @@ class TextFractionApi(MyTestCase):
     def test_get_one_bad_embed(self):
         r = self.client.get('/api/v1/extracts/1?embed=BAD')
         self.assertEqual(r.status_code, 404)
+
+
+test_user = User(login='testuser', name='Test User', password='testpassword')
+class TestLogin(MyTestCase):
+
+    def setUp(self):
+        self.client = self.app.test_client()
+        with session_scope() as sess:
+            sess.add(test_user)
+
+    def test_login(self):
+        r = self.client.post('/login', json={'login': 'testuser', 'password': 'testpassword'})
+        print(r)
+        self.assertEqual(r.status_code, 200)
+        data = r.json or {}
+        self.assertEqual(data.get('success'), True)

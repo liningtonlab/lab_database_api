@@ -2,11 +2,14 @@ from flask import abort, request
 from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
+from api.auth import check_auth
 from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
 from api.models import DiveSite, get_all, get_one
 
 
 class DiveSites(Resource):
+    decorators = [check_auth]
+
     def get(self, **kwargs):
         id_ = kwargs.get('id')
         embed = get_embedding(request.args.get('embed'))

@@ -226,19 +226,16 @@ class Extract(Base):
     isolate_id = Column(Integer, ForeignKey("isolate.id"))
     media_id = Column(Integer, ForeignKey("media.id"))
     media = relationship("Media")
-    library_id = Column(Integer, ForeignKey("library.id"))
+    library_abbrev = Column(String(5), ForeignKey("library.abbrev"))
     library = relationship("Library", backref="extracts")
     fractions = relationship("Fraction", back_populates="extract")
 
     @property
     def name(self):
-        try:
-            return "RL{}-{:04d}".format(
-                self.library.abbrev,
-                self.number,
-            )
-        except AttributeError:
-            return None
+        return "RL{}-{:04d}".format(
+            self.library_abbrev,
+            self.number,
+        )
 
     def __repr__(self):
         return f"<{self.__class__.__name__} id={self.id}>"
@@ -263,7 +260,7 @@ class Fraction(Base):
         try:
             ex = self.extract
             return "RL{}-{:04d}{}".format(
-                ex.library.abbrev,
+                ex.library_abbrev,
                 ex.number,
                 self.code
             )
@@ -330,17 +327,20 @@ class MediaRecipe(Base):
 # Library Table ORM
 class Library(Base):
     __tablename__ = "library"
-    id = Column(Integer, primary_key=True)
-    abbrev = Column(String(5), nullable=False)
+    abbrev = Column(String(5), primary_key=True)
     name = Column(String(45), nullable=False)
     description = Column(String(255))
     notes = Column(Text)
+
+    @hybrid_property
+    def id(self):
+        return self.abbrev
 
     def __repr__(self):
         return f"<{self.__class__.__name__} id={self.id}>"
 
     def __eq__(self, other):
-        return isinstance(other, Library) and other.id == self.id
+        return isinstance(other, Library) and other.abbrev == self.abbrev
 
     def __hash__(self):
         return hash(self.id)
@@ -369,12 +369,10 @@ class ScreenPlate(Base):
 class FractionScreenPlate(Base):
     __tablename__ = "fraction_screen_plate"
     id = Column(Integer, primary_key=True)
-    fraction_id = Column(Integer, ForeignKey("fraction.id"),
-                         nullable=False)
-    fraction = relationship("Fraction")
-    screen_plate_id = Column(Integer, ForeignKey("screen_plate.id"),
-                             nullable=False)
-    screen_plate = relationship("ScreenPlate")
+    fraction_id = Column(Integer, ForeignKey("fraction.id"))
+    fraction = relationship("Fraction", backref="fraction_screen_plates")
+    screen_plate_id = Column(Integer, ForeignKey("screen_plate.id"))
+    screen_plate = relationship("ScreenPlate", backref="fraction_screen_plate")
     well = Column(String(45))
     notes = Column(Text)
 

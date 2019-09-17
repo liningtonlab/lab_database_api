@@ -49,7 +49,7 @@ MODEL_MAP = {
 TABLE_MAP = {v:k for k,v in ENDPOINT_MAP.items()}
 
 CONF = app_config[os.getenv('FLASK_ENV', 'development')]
-BASE_URL = f"http://{CONF.BASE_URL}:5000/api/v1"
+BASE_URL = f"http://{CONF.BASE_URL}:5000"
 
 
 def get_embedding(embed):
@@ -59,8 +59,20 @@ def get_embedding(embed):
 
 def validate_embed(Doa, embed):
     relationships = get_relationships(Doa)
-    # Test if embed is a subset of relationships
-    return set(embed) <= set(relationships) 
+    for e in embed:
+        if " " in e:
+            e_split = e.split(' ')
+            e1 = e_split[0]
+            e2s = e_split[1:]
+            sub_Doa = MODEL_MAP[TABLE_MAP[e1]]
+            sub_relationships = get_relationships(sub_Doa)
+            if e1 not in relationships or any(e2 not in sub_relationships for e2 in e2s):
+                return False
+            continue
+        if e not in relationships:
+            return False
+    return True
+
 
 
 def get_relationships(Doa):
@@ -78,7 +90,7 @@ def get_relationships(Doa):
 
 def row2dict(row):
     result = {}
-    if isinstance(row, Extract) or isinstance(row, Fraction):
+    if isinstance(row, Extract):
         extra = ['name']
     else:
         extra = []
@@ -119,15 +131,48 @@ def media2dict(row):
     result['recipe'] = recipe
     return result
 
+def fraction2dict(row):
+    result = {}
+    # Serialize table without foreign keys
+    for c in row.__table__.columns:
+        r = getattr(row, c.name)
+        result[c.name] = r
+    # Extra name attribute
+    result['name'] = row.name    
+    screen_plates = []
+    for i in row.fraction_screen_plates:
+        screen_plates.append({
+            "name": i.screen_plate.name,
+            "htcb_name": i.screen_plate.htcb_name,
+            "plate_format": i.screen_plate.well_format,
+            "well": i.well,
+            "notes": i.notes
+        })
+    result['screen_plates'] = screen_plates
+    return result
 
 def serialize_row(row, embed):
     self_ = f"/{ENDPOINT_MAP[row.__table__.name]}/{row.id}"
-    # No embeddings allowed for media
-    # Separate media to serialize to that recipe is included
+    # Check for nested embedding
+    nested_embed = {}
+    parsed_embed = []
+    for e in embed:
+        if " " in e:
+            e_split = e.split(' ')
+            parsed_embed.append(e_split[0])
+            nested_embed[e_split[0]] = e_split[1:]
+        else:
+            parsed_embed.append(e)
+
+    # Separate media to serialize so that recipe is included
     if isinstance(row, Media):
         result = media2dict(row)
     else:
-        result = row2dict(row)
+         # Separate fraction to serialize so that screen_plate data is included
+        if isinstance(row, Fraction):
+            result = fraction2dict(row) 
+        else:
+            result = row2dict(row)
         # Serialize relationships as lists of links
         for rel in row.__mapper__.relationships.keys():
             try:
@@ -137,9 +182,16 @@ def serialize_row(row, embed):
             r = getattr(row, rel)
             if not isinstance(r, list):
                 r = [r]
-            result[key] = {"links":[f"{BASE_URL}/{key}/{x.id}" for x in r if x]}
-            if key in embed:
-                result[key]["embedded"] = [row2dict(x) for x in r if x]
+            # result[key] = {"links":[f"{BASE_URL}/api/v1/{key}/{x.id}" for x in r if x]}
+            result[key] = {"links":[f"/api/v1/{key}/{x.id}" for x in r if x]}
+            if key in parsed_embed:
+                if nested_embed.get(key):
+                    result[key]["embedded"] = [serialize_row(x, embed=nested_embed.get(key)) for x in r if x]
+                else:
+                    if key == "fractions":
+                        result[key]["embedded"] = [fraction2dict(x) for x in r if x]
+                    else:
+                        result[key]["embedded"] = [row2dict(x) for x in r if x]
     return result
 
 

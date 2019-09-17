@@ -21,20 +21,23 @@ def create_app(config_name):
     # Simple collections + resources
     api.add_resource(Summary, '/api/v1/')
     api.add_resource(Heartbeat, '/api/v1/heartbeat')
-    api.add_resource(Divers, '/api/v1/divers', '/api/v1/divers/<int:id>')
-    api.add_resource(DiveSites, '/api/v1/divesites', '/api/v1/divesites/<int:id>')
-    api.add_resource(Extracts, '/api/v1/extracts', '/api/v1/extracts/<int:id>')
-    api.add_resource(Fractions, '/api/v1/fractions', '/api/v1/fractions/<int:id>')
-    api.add_resource(Isolates, '/api/v1/isolates', '/api/v1/isolates/<int:id>')
-    api.add_resource(Libraries, '/api/v1/libraries', '/api/v1/libraries/<int:id>')
-    api.add_resource(MediaEP, '/api/v1/media', '/api/v1/media/<int:id>')
-    api.add_resource(Permits, '/api/v1/permits', '/api/v1/permits/<int:id>')
-    api.add_resource(Samples, '/api/v1/samples', '/api/v1/samples/<int:id>',
+    api.add_resource(Divers, '/api/v1/divers', '/api/v1/divers/<string:id>')
+    api.add_resource(DiveSites, '/api/v1/divesites', '/api/v1/divesites/<string:id>')
+    api.add_resource(Extracts, '/api/v1/extracts', '/api/v1/extracts/<string:id>')
+    api.add_resource(Fractions, '/api/v1/fractions', '/api/v1/fractions/<string:id>')
+    api.add_resource(Isolates, '/api/v1/isolates', '/api/v1/isolates/<string:id>')
+    api.add_resource(Libraries, '/api/v1/libraries', '/api/v1/libraries/<string:id>')
+    api.add_resource(MediaEP, '/api/v1/media', '/api/v1/media/<string:id>')
+    api.add_resource(Permits, '/api/v1/permits', '/api/v1/permits/<string:id>')
+    api.add_resource(Samples, '/api/v1/samples', '/api/v1/samples/<string:id>',
         # Example collection endpoints
         # '/api/v1/samples/<int:id>/<string:collection>/',
         # '/api/v1/samples/<int:id>/<string:collection>/<int:coll_id>',
     )
-    api.add_resource(SampleTypes, '/api/v1/sampletypes', '/api/v1/sampletypes/<int:id>')
-    api.add_resource(ScreenPlates, '/api/v1/screenplates', '/api/v1/screenplates/<int:id>')
+    api.add_resource(SampleTypes, '/api/v1/sampletypes', '/api/v1/sampletypes/<string:id>')
+    api.add_resource(ScreenPlates, '/api/v1/screenplates', '/api/v1/screenplates/<string:id>')
+
+    from .auth import auth_blueprint
+    app.register_blueprint(auth_blueprint)
 
     return app

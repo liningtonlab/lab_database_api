@@ -4,7 +4,7 @@ import os
 class Config(object):
     """Parent configuration class."""
     CSRF_ENABLED = True
-    SECRET_KEY = os.getenv('SECRET')
+    SECRET_KEY = os.getenv('SECRET_KEY')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     BASE_URL = os.getenv('BASE_URL', "localhost")
