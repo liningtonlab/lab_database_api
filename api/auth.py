@@ -8,7 +8,7 @@ from api.models import User, UserToken, session_scope
 
 def token_is_valid(token):
     try:
-        _ = jwt.decode(token, key=current_app.config.get("SECRET_KEY"), algorithm='HS256')
+        _ = jwt.decode(token, key=current_app.config.get("SECRET_KEY", "TOPSECRET"), algorithm='HS256')
     except jwt.ExpiredSignatureError:
         # TODO: Remove Token from DB
         return False
@@ -74,7 +74,7 @@ def login():
         jw_token = jwt.encode(
             {'login': uname, 'iat': datetime.datetime.utcnow(),
             'exp': datetime.datetime.utcnow()+datetime.timedelta(30)},
-            key=current_app.config.get("SECRET_KEY"),
+            key=current_app.config.get("SECRET_KEY", "TOPSECRET"),
             algorithm='HS256'
             ).decode()
         token = UserToken(token=jw_token)

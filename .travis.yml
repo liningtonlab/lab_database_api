@@ -2,7 +2,7 @@ language: python
 python:
   - "3.7"
 env:
-  - FLASK_APP=server.py FLASK_ENV=testing SERVER_NAME="localhost:5000"
+  - FLASK_APP=server.py FLASK_ENV=testing SERVER_NAME="localhost:5000" SECRET_KEY="TOPSECRET"
 matrix:
   include:
     # Remove SQLite tests
