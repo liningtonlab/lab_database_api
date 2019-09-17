@@ -18,6 +18,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     """Configurations for Testing, with a separate test database."""
     TESTING = True
+    SECRET_KEY = os.getenv('SECRET_KEY', "TOPSECRET")
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL')
     DEBUG = True
 
