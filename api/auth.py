@@ -1,3 +1,4 @@
+import os
 import datetime
 
 import jwt
@@ -12,15 +13,11 @@ try:
     PRIVATE_KEY = open('jwt.key').read()
     PUBLIC_KEY = open('jwt.key.pub').read()
     ALGORITHM = "RS256"
+# Assume testing or not interested in RS keys
 except FileNotFoundError as e:
-    try:
-        if check_auth.config['TESTING']:
-                PRIVATE_KEY = "TOPSECRET"
-                PUBLIC_KEY = PRIVATE_KEY
-                ALGORITHM = "HS256"
-    except RuntimeError as e:
-        raise e
-
+    PRIVATE_KEY = os.getenv("SECRET_KEY", "TOPSECRET")
+    PUBLIC_KEY = PRIVATE_KEY
+    ALGORITHM = "HS256"
 
 def token_is_valid(token):
     try:
