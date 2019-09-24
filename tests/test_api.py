@@ -649,7 +649,7 @@ class TestLogin(MyTestCase):
             sess.add(test_user)
 
     def test_login(self):
-        r = self.client.post('/login', json={'login': 'testuser', 'password': 'testpassword'})
+        r = self.client.post('/api/v1/login', json={'login': 'testuser', 'password': 'testpassword'})
         print(r)
         self.assertEqual(r.status_code, 200)
         data = r.json or {}

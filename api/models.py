@@ -18,6 +18,8 @@ class User(Base):
     login = Column(String(125), nullable=False, unique=True)
     name = Column(String(256), nullable=False, unique=True)
     password_hash = Column(String(128), nullable=False)
+    # 0 = SUPERUSER; 1 = ADMIN; 2 = GUEST
+    level = Column(Integer, nullable=False, default=2)
     tokens = relationship("UserToken", backref="user")
 
     @property
@@ -37,7 +39,7 @@ class UserToken(Base):
     __tablename__ = "user_token"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
-    token = Column(String(256), index=True)
+    token = Column(String(4056))
 
 
 @contextmanager

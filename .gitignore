@@ -10,3 +10,6 @@ cover/
 __pycache__/
 .pytest_cache/
 .noseids
+
+# Private and Public Key for authentication
+jwt.key*
