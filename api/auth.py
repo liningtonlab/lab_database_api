@@ -61,7 +61,7 @@ def check_auth(func):
     def wrapper(*args, **kwargs):
         user = get_identify(request)
         # Override authentication for testing
-        if current_app.config.get('TESTING'):
+        if current_app.config.get('ENV') in ['development', 'testing']:
             user = True
         if not user:
             return {"error": "User not authenticated"}, 401
