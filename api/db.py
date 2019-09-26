@@ -7,7 +7,7 @@ from api.common.sql_models import Base
 Session = scoped_session(sessionmaker(autoflush=True, autocommit=False))
 
 def init_db(app=current_app):
-    app.engine = create_engine(app.config.get('SQLALCHEMY_DATABASE_URI'))
+    app.engine = create_engine(app.config.get('SQLALCHEMY_DATABASE_URI'), pool_size=8, pool_pre_ping=True)
     
     Session.configure(bind=app.engine)
     Base.metadata.create_all(bind=app.engine)
