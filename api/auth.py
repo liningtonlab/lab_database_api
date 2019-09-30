@@ -5,7 +5,8 @@ import jwt
 from functools import wraps
 from flask import Blueprint, current_app, jsonify, request, abort
 
-from api.models import User, UserToken, session_scope
+from api.db import session_scope
+from api.models import User, UserToken
 
 # This seems to be compatible with gunicorn + running test
 # May need revision
@@ -37,13 +38,17 @@ def clean_tokens(user, sess):
 
 
 def get_identify(request):
+    """Given a request, try to get authenticated user
+
+    returns: user and user authorization level
+    """
     # Query Arg based auth
     token = request.args.get('token')
     if token and token_is_valid(token):
         with session_scope() as sess:
             user = sess.query(User).join(UserToken).filter_by(token=token).first()
             if user:
-                return user
+                return user, user.level
     # Header based auth
     token = request.headers.get('Authorization')
     if token:
@@ -52,21 +57,49 @@ def get_identify(request):
             with session_scope() as sess:
                 user = sess.query(User).join(UserToken).filter_by(token=token).first()
                 if user:
-                    return user
+                    return user, user.level
+    return None, None
+
+
+def get_user_id(request):
+    """Given a request, try to get authenticated user id
+
+    returns: User id or None
+    """
+    # Query Arg based auth
+    token = request.args.get('token')
+    if token and token_is_valid(token):
+        with session_scope() as sess:
+            user = sess.query(User).join(UserToken).filter_by(token=token).first()
+            if user:
+                return user.id
+    # Header based auth
+    token = request.headers.get('Authorization')
+    if token:
+        token = token.replace('JWT', '', 1).strip()
+        if token_is_valid(token):
+            with session_scope() as sess:
+                user = sess.query(User).join(UserToken).filter_by(token=token).first()
+                if user:
+                    return user.id
     return None
 
 
 def check_auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        user = get_identify(request)
-        # Override authentication for testing
+        user, level = get_identify(request)
+        # Override authentication / authorization for testing
         if current_app.config.get('ENV') in ['development', 'testing']:
             user = True
+            level = 1
         if not user:
             return {"error": "User not authenticated"}, 401
-        else:
-            return func(*args, **kwargs)
+        # Only admin / superusers have these privileges
+        if request.method in ['POST', 'PUT', 'DELETE']:
+            if level > 1:
+                return {"error": "User does not have privileges"}, 403
+        return func(*args, **kwargs)
     return wrapper
 
 
@@ -115,7 +148,7 @@ def login():
 @auth_blueprint.route('/api/v1/logout', methods=['GET'])
 @check_auth
 def logout():
-    # To get past `check_auth` token is necessarily valid *EXCEPT* in testing env
+    # To get past `check_auth` token is necessarily valid *EXCEPT* in dev/testing env
     token = request.args.get('token')
     if not token:
         token = request.headers.get('Authorization')

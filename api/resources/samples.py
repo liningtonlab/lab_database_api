@@ -5,9 +5,11 @@ from sqlalchemy.orm.exc import NoResultFound
 # from api.common.exc import ValidationException
 # from api.common.utils import (get_relationships, jsonify_sqlalchemy,
 #                               get_embedding)
-from api.auth import check_auth
-from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
-from api.models import Sample, get_all, get_one, search_query
+from api.auth import check_auth, get_user_id
+from api.common.utils import (get_embedding, jsonify_sqlalchemy,
+                              validate_embed, validate_sample_input)
+from api.db import add_one_sample, get_all, get_one, search_query
+from api.models import Sample
 
 # First attempt at getting relationships
 # Should be easier to try and get a queried relationsip
@@ -44,10 +46,19 @@ class Samples(Resource):
             return jsonify_sqlalchemy(get_all(Sample), embed=embed)
 
     def put(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501
 
     def post(self, **kwargs):
-        pass
+        if any(kwargs):
+            abort(404)
+        data = request.get_json()
+        if not data:
+            abort(400, "No input provided")
+        data['insert_by'] = get_user_id(request)
+        if not validate_sample_input(data):
+            abort(400, "Invalid JSON input")
+        id_ = add_one_sample(data)
+        return {"success": True, "link": f"/api/v1/samples/{id_}"}, 201
 
     def delete(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501

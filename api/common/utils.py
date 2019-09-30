@@ -57,6 +57,7 @@ def get_embedding(embed):
         return []
     return embed.split(',')
 
+
 def validate_embed(Doa, embed):
     relationships = get_relationships(Doa)
     for e in embed:
@@ -72,7 +73,6 @@ def validate_embed(Doa, embed):
         if e not in relationships:
             return False
     return True
-
 
 
 def get_relationships(Doa):
@@ -114,6 +114,7 @@ def row2dict(row):
         result[e] = r
     return result
 
+
 def media2dict(row):
     result = {}
     # Serialize table without foreign keys
@@ -130,6 +131,7 @@ def media2dict(row):
         })
     result['recipe'] = recipe
     return result
+
 
 def fraction2dict(row):
     result = {}
@@ -151,6 +153,13 @@ def fraction2dict(row):
     result['screen_plates'] = screen_plates
     return result
 
+
+def isolate2dict(row):
+    result = row2dict(row)
+    result['stocks'] = [row2dict(s) for s in row.stocks]
+    return result
+
+
 def serialize_row(row, embed):
     self_ = f"/{ENDPOINT_MAP[row.__table__.name]}/{row.id}"
     # Check for nested embedding
@@ -170,7 +179,9 @@ def serialize_row(row, embed):
     else:
          # Separate fraction to serialize so that screen_plate data is included
         if isinstance(row, Fraction):
-            result = fraction2dict(row) 
+            result = fraction2dict(row)
+        elif isinstance(row, Isolate):
+            result = isolate2dict(row)
         else:
             result = row2dict(row)
         # Serialize relationships as lists of links
@@ -179,6 +190,9 @@ def serialize_row(row, embed):
                 key = ENDPOINT_MAP[rel]
             except KeyError:
                 key = rel
+            # Pass over stocks
+            if key == "stocks":
+                continue
             r = getattr(row, rel)
             if not isinstance(r, list):
                 r = [r]
@@ -190,6 +204,8 @@ def serialize_row(row, embed):
                 else:
                     if key == "fractions":
                         result[key]["embedded"] = [fraction2dict(x) for x in r if x]
+                    if key == "isolates":
+                        result[key]["embedded"] = [isolate2dict(x) for x in r if x]
                     else:
                         result[key]["embedded"] = [row2dict(x) for x in r if x]
     return result
@@ -199,3 +215,78 @@ def jsonify_sqlalchemy(res, embed=[]):
     if not isinstance(res, list):
         return serialize_row(res, embed=embed) 
     return [serialize_row(r, embed=embed) for r in res]
+
+
+def validate_input(Doa, data):
+    columns = set([x.name for x in Doa.__table__.columns])
+    required_columns = set([x.name for x in Doa.__table__.columns if not x.nullable])
+    # Allow for tables without an id field
+    required_columns.discard("id")
+    if Doa == MediaRecipe:
+        required_columns.discard("media_id")
+
+    inputs = set(data.keys())
+    # Check all inputs are registered kwargs
+    # and that there are no missing required keys
+    if (not inputs.issubset(columns) or 
+        not inputs.issuperset(required_columns)):
+        return False
+    return True
+
+
+def validate_sample_input(data):
+    """
+    Sample Data:
+    {
+        name:, "STRING", # REQUIRED
+        collection_number, INT, # REQUIRED
+        collection_year, INT, # REQUIRED
+        collection_date, "DATESTRING ex.'2014-07-09'",
+        color, "STRING",
+        depth_ft, FLOAT,
+        genus_species, "STRING",
+        notes, "STRING",
+        insert_by, INT, 
+        insert_date, "DATESTRING", # DEFAULT = UTC.now
+        dive_site_id, INT, # REQUIRED
+        diver_ids, [INT, INT, ...],
+        sample_type_id, INT,
+        permit_id, INT
+    }
+    """
+    # Make copy of data so not actually popping real data
+    data_copy = data.copy()
+    diver_ids = data_copy.pop("diver_ids", [])
+    if not isinstance(diver_ids, list):
+        return False
+    return validate_input(Sample, data_copy)
+
+def validate_media_input(data):
+    """
+    Sample data:
+    {
+        "media": {
+            "name": "TES" # REQUIRED,
+            "notes: "Test media"
+        },
+        "recipe": [
+            {
+                "ingredient": "test1", # REQUIRED
+                "amount": 1.0, # REQUIRED
+                "unit": "amu", # REQUIRED
+                "notes": "Test ingredient"
+            }, ...
+        ]
+    }
+    """
+    media_data = data.get("media")
+    recipe_data = data.get("recipe")
+    print(media_data)
+    print(recipe_data)
+    # First check data was provided
+    if not (media_data and recipe_data):
+        return False
+    return validate_input(Media, media_data) and all(validate_input(MediaRecipe, x) for x in recipe_data)
+
+# Flat JSON string for testing
+# '{"media":{"name":"TES","notes":"Test media"},"recipe":[{"ingredient":"test1","amount":1.0,"unit":"amu","notes":"Test ingredient"}]}'

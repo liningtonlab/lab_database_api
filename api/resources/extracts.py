@@ -3,8 +3,10 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.auth import check_auth
-from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
-from api.models import Extract, get_all, get_one, search_query
+from api.common.utils import (get_embedding, jsonify_sqlalchemy,
+                              validate_embed, validate_input)
+from api.db import add_one, get_all, get_one, search_query
+from api.models import Extract
 
 
 class Extracts(Resource):
@@ -34,10 +36,18 @@ class Extracts(Resource):
             return jsonify_sqlalchemy(get_all(Extract), embed)
 
     def put(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501
 
     def post(self, **kwargs):
-        pass
+        if any(kwargs):
+            abort(404)
+        data = request.get_json()
+        if not data:
+            abort(400, "No input provided")
+        if not validate_input(Extract, data):
+            abort(400, "Invalid JSON input")
+        id_ = add_one(Extract, data)
+        return {"success": True, "link": f"/api/v1/extracts/{id_}"}, 201
 
     def delete(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501

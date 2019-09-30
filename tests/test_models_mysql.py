@@ -5,11 +5,11 @@ from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.orm.exc import NoResultFound
 from tests.myTestCase import MyTestCase
 
-from api.db import Session
+from api.db import session_scope, get_all, get_one
 from api.models import (Diver, DiveSite, Extract, Fraction,
                         FractionScreenPlate, Isolate, IsolateStock, Library,
                         Media, MediaRecipe, Permit, Sample, SampleType,
-                        ScreenPlate, get_all, get_one, session_scope)
+                        ScreenPlate)
 """
 Cannot currently catch SQLite errors through Python
 https://bugs.python.org/issue16379
@@ -21,8 +21,8 @@ This is fine because the production system uses MySQL.
 
 
 # Define Test Divers
-diver_1 = Diver(id=1, first_name='Test', last_name='Case1')
-diver_2 = Diver(id=2, first_name='Test', last_name='Case2')
+diver_1 = Diver(id=1, first_name='Test', last_name='Case1', institution='TEST')
+diver_2 = Diver(id=2, first_name='Test', last_name='Case2', institution='TEST')
 diver_empty = Diver()
 diver_sample = Sample(name='Diver Sample', collection_number=1, collection_year=1,
     divers=[diver_2]
@@ -33,7 +33,7 @@ class TestDiverModel(MyTestCase):
 
     def setUp(self):
         with session_scope() as sess:
-            sess.add_all([diver_1, diver_2, diver_empty])
+            sess.add_all([diver_1, diver_2])
     
     def test_get_one(self):
         res = get_one(Diver, 1)
@@ -42,19 +42,19 @@ class TestDiverModel(MyTestCase):
 
     def test_get_all(self):
         res = get_all(Diver)
-        self.assertEqual(len(res), 3)
+        self.assertEqual(len(res), 2)
         for r in res:
             self.assertIsInstance(r, Diver)
     
-    def test_get_third_empty_attributes(self):
-        res = get_one(Diver, 3)
-        self.assertEqual(res.first_name, None)
-        self.assertEqual(res.last_name, None)
-
     def test_relationship(self):
         res = get_one(Diver, 2)
         self.assertIsInstance(res, Diver)
         self.assertIsInstance(res.samples[0], Sample)
+
+    def test_bad_params(self):
+        with self.assertRaises(IntegrityError):
+            with session_scope() as sess:
+                sess.add(diver_empty)
 
     def test_bad_relationship(self):
         res = get_one(Diver, 2)
@@ -295,8 +295,8 @@ class TestScreenPlateModel(MyTestCase):
 # Define Test Samples
 # and associated relationships
 sample_dive_site=DiveSite(name='Sample diversite', lat=1.1, lon=0.0)
-diver_s1=Diver(first_name='Test', last_name='Diver1')
-diver_s2=Diver(first_name='Test', last_name='Diver2')
+diver_s1=Diver(first_name='Test', last_name='Diver1', institution='TEST')
+diver_s2=Diver(first_name='Test', last_name='Diver2', institution='TEST')
 sample_sample_type=SampleType(name='Sample sample type')
 sample_permit=Permit(name='sample permit', iss_auth='jvansan')
 sample_isolate=Isolate(name='sample isolate')

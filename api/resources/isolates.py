@@ -2,9 +2,11 @@ from flask import abort, request
 from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
-from api.auth import check_auth
-from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
-from api.models import Isolate, get_all, get_one, search_query
+from api.auth import check_auth, get_user_id
+from api.common.utils import (get_embedding, jsonify_sqlalchemy,
+                              validate_embed, validate_input)
+from api.db import add_one, get_all, get_one, search_query
+from api.models import Isolate
 
 
 class Isolates(Resource):
@@ -32,10 +34,20 @@ class Isolates(Resource):
             return jsonify_sqlalchemy(get_all(Isolate), embed=embed)
 
     def put(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501
 
     def post(self, **kwargs):
-        pass
+        # TODO: implement with stock - see media for inspiration
+        if any(kwargs):
+            abort(404)
+        data = request.get_json()
+        if not data:
+            abort(400, "No input provided")
+        data['insert_by'] = get_user_id(request)
+        if not validate_input(Isolate, data):
+            abort(400, "Invalid JSON input")
+        id_ = add_one(Isolate, data)
+        return {"success": True, "link": f"/api/v1/isolates/{id_}"}, 201
 
     def delete(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501

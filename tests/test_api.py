@@ -2,11 +2,11 @@ import unittest
 import datetime
 from tests.myTestCase import MyTestCase
 
-from api.db import Session
+from api.db import session_scope
 from api.models import (Diver, DiveSite, Extract, Fraction,
                         Isolate, IsolateStock, Library,
                         Media, MediaRecipe, Permit, Sample, SampleType,
-                        ScreenPlate, session_scope, User)
+                        ScreenPlate, User)
 
 
 class TestApiRoot(MyTestCase):
@@ -45,7 +45,7 @@ class TestHeartBeatApi(MyTestCase):
         self.assertDictEqual(r.json, {})
 
 
-d1 = Diver(first_name='Jeff', last_name='van Santen')
+d1 = Diver(first_name='Jeff', last_name='van Santen', institution='SFU')
 d2 = Diver(first_name='Roger',last_name='Linington',
     institution='SFU',email='rliningt@sfu.ca',notes='PI')
 d_s = Sample(name='Diver Sample', collection_number=1, collection_year=1,
@@ -312,12 +312,12 @@ class TestScreenPlateApi(MyTestCase):
 
 
 sample_dive_site=DiveSite(name='Sample diversite', lat=1.1, lon=0.0)
-diver_s1=Diver(first_name='Test', last_name='Diver1')
-diver_s2=Diver(first_name='Test', last_name='Diver2')
+diver_s1=Diver(first_name='Test', last_name='Diver1', institution='TEST')
+diver_s2=Diver(first_name='Test', last_name='Diver2', institution='TEST')
 sample_sample_type=SampleType(name='Sample sample type')
 sample_permit=Permit(name='sample permit', iss_auth='jvansan')
 sample_isolate=Isolate(name='sample isolate')
-sample_1 = Sample(name='RL01-001', collection_number=1, collection_year=1)
+sample_1 = Sample(name='RL01-001', collection_number=1, collection_year=1, dive_site=sample_dive_site)
 # sample 2 gets all attributes for testing
 sample_2 = Sample(name='RL02-002', collection_number=2, collection_year=2,
     collection_date=datetime.date.today(),
@@ -472,14 +472,6 @@ class TestIsolateApi(MyTestCase):
         data = r.json
         self.assertIsInstance(data, dict)
         embedded = data.get('extracts').get('embedded')
-        self.assertIsInstance(embedded, list)
-        self.assertEqual(len(embedded), 1)
-
-    def test_get_one_good_embed_stocks(self):
-        r = self.client.get('/api/v1/isolates/2?embed=stocks')
-        data = r.json
-        self.assertIsInstance(data, dict)
-        embedded = data.get('stocks').get('embedded')
         self.assertIsInstance(embedded, list)
         self.assertEqual(len(embedded), 1)
 

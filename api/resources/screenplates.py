@@ -4,7 +4,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from api.auth import check_auth
 from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
-from api.models import ScreenPlate, get_all, get_one
+from api.db import get_all, get_one, search_query
+from api.models import ScreenPlate
 
 
 class ScreenPlates(Resource):
@@ -26,10 +27,10 @@ class ScreenPlates(Resource):
             return jsonify_sqlalchemy(get_all(ScreenPlate), embed=embed)
 
     def put(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501
 
     def post(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501
 
     def delete(self, **kwargs):
-        pass
+        return {"message": "Method not implemented"}, 501

@@ -40,4 +40,16 @@ def create_app(config_name):
     from .auth import auth_blueprint
     app.register_blueprint(auth_blueprint)
 
+    @app.errorhandler(400)
+    def bad_request(e):
+        return {"message":str(e)}, 400
+
+    @app.errorhandler(404)
+    def resource_not_found(e):
+        return {"message":str(e)}, 404
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return {"message":str(e)}, 500
+
     return app
