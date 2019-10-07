@@ -3,8 +3,9 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.auth import check_auth, get_user_id
-from api.common.utils import (get_embedding, jsonify_sqlalchemy,
-                              validate_embed, validate_input)
+from api.common.utils import (filter_empty_strings, get_embedding,
+                              jsonify_sqlalchemy, validate_embed,
+                              validate_input)
 from api.db import add_one, get_all, get_one, search_query
 from api.models import Isolate
 
@@ -44,6 +45,7 @@ class Isolates(Resource):
         if not data:
             abort(400, "No input provided")
         data['insert_by'] = get_user_id(request)
+        data = filter_empty_strings(data)
         if not validate_input(Isolate, data):
             abort(400, "Invalid JSON input")
         id_ = add_one(Isolate, data)

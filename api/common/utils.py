@@ -290,3 +290,12 @@ def validate_media_input(data):
 
 # Flat JSON string for testing
 # '{"media":{"name":"TES","notes":"Test media"},"recipe":[{"ingredient":"test1","amount":1.0,"unit":"amu","notes":"Test ingredient"}]}'
+
+def filter_empty_strings(data):
+    def my_filter(d_tup):
+        val = d_tup[1]
+        if isinstance(val, str):
+            return bool(val)
+        else:
+            return True
+    return dict(filter(my_filter, data.items()))

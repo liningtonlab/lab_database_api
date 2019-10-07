@@ -3,7 +3,9 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.auth import check_auth
-from api.common.utils import get_embedding, jsonify_sqlalchemy, validate_embed
+from api.common.utils import (filter_empty_strings, get_embedding,
+                              jsonify_sqlalchemy, validate_embed,
+                              validate_input)
 from api.db import get_all, get_one, search_query
 from api.models import ScreenPlate
 

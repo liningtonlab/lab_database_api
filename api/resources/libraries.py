@@ -3,8 +3,9 @@ from flask_restful import Resource
 from sqlalchemy.orm.exc import NoResultFound
 
 from api.auth import check_auth
-from api.common.utils import (get_embedding, jsonify_sqlalchemy,
-                              validate_embed, validate_input)
+from api.common.utils import (filter_empty_strings, get_embedding,
+                              jsonify_sqlalchemy, validate_embed,
+                              validate_input)
 from api.db import add_one, get_all, get_one
 from api.models import Library
 
@@ -37,6 +38,7 @@ class Libraries(Resource):
         data = request.get_json()
         if not data:
             abort(400, "No input provided")
+        data = filter_empty_strings(data)
         if not validate_input(Library, data):
             abort(400, "Invalid JSON input")
         id_ = add_one(Library, data)
