@@ -52,6 +52,12 @@ CONF = app_config[os.getenv('FLASK_ENV', 'development')]
 BASE_URL = f"http://{CONF.BASE_URL}:5000"
 
 
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 def get_embedding(embed):
     if not embed:
         return []
@@ -234,24 +240,55 @@ def validate_input(Doa, data):
     return True
 
 
+def validate_isolate_input(data):
+    """Isolate Data
+    
+    Args:
+    {
+        name: "STRING", # REQUIRED
+        color: "STRING",
+        morphology: "STRING",
+        sequence: "STRING",
+        sequence_dir: "STRING",
+        sequence_file: "STRING",
+        notes: "STRING",
+        insert_by: INT,
+        insert_date: "DATESTRING",
+        media_id: INT,
+        sample_id: INT,
+        stock: {
+            box: INT,
+            box_position: INT,
+            num_in_stock: INT,
+            date_added: "DATESTRING"
+        }
+    }
+    """
+    data_copy = data.copy()
+    stock = data_copy.pop("stock")
+    if not stock:
+        return False
+    return validate_input(Isolate, data_copy)
+
+
 def validate_sample_input(data):
     """
     Sample Data:
     {
-        name:, "STRING", # REQUIRED
-        collection_number, INT, # REQUIRED
-        collection_year, INT, # REQUIRED
-        collection_date, "DATESTRING ex.'2014-07-09'",
-        color, "STRING",
-        depth_ft, FLOAT,
-        genus_species, "STRING",
-        notes, "STRING",
-        insert_by, INT, 
-        insert_date, "DATESTRING", # DEFAULT = UTC.now
-        dive_site_id, INT, # REQUIRED
-        diver_ids, [INT, INT, ...],
-        sample_type_id, INT,
-        permit_id, INT
+        name: "STRING", # REQUIRED
+        collection_number: INT, # REQUIRED
+        collection_year: INT, # REQUIRED
+        collection_date: "DATESTRING ex.'2014-07-09'",
+        color: "STRING",
+        depth_ft: FLOAT,
+        genus_species: "STRING",
+        notes: "STRING",
+        insert_by: INT, 
+        insert_date: "DATESTRING", # DEFAULT = UTC.now
+        dive_site_id: INT, # REQUIRED
+        diver_ids: [INT, INT, ...],
+        sample_type_id: INT,
+        permit_id: INT
     }
     """
     # Make copy of data so not actually popping real data

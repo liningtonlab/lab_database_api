@@ -41,7 +41,7 @@ class SampleTypes(Resource):
         if not validate_input(SampleType, data):
             abort(400, "Invalid JSON input")
         id_ = add_one(SampleType, data)
-        return {"success": True, "link": f"/api/v1/sampletypes/{id_}"}, 201
+        return {"success": True, "link": f"/api/v1/sampletypes/{id_}", "id": id_}, 201
 
     def delete(self, **kwargs):
         return {"message": "Method not implemented"}, 501

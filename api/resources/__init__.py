@@ -9,7 +9,7 @@ from api.resources.fractions import Fractions
 from api.resources.isolates import Isolates
 from api.resources.libraries import Libraries
 from api.resources.media import MediaEP
-from api.resources.permits import Permits
+from api.resources.permits import Permits, PermitsFile
 from api.resources.samples import Samples
 from api.resources.sampletypes import SampleTypes
 from api.resources.screenplates import ScreenPlates

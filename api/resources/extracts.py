@@ -49,7 +49,7 @@ class Extracts(Resource):
         if not validate_input(Extract, data):
             abort(400, "Invalid JSON input")
         id_ = add_one(Extract, data)
-        return {"success": True, "link": f"/api/v1/extracts/{id_}"}, 201
+        return {"success": True, "link": f"/api/v1/extracts/{id_}", "id": id_}, 201
 
     def delete(self, **kwargs):
         return {"message": "Method not implemented"}, 501

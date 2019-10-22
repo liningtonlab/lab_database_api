@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from api.common.sql_models import Base
-from api.models import (Diver, Extract, Fraction, Library, Media, MediaRecipe,
-                        Sample)
+from api.models import (Diver, Extract, Fraction, Isolate, IsolateStock, Library, Media,
+                        MediaRecipe, Sample)
 
 Session = scoped_session(sessionmaker(autoflush=True, autocommit=False))
 
@@ -70,6 +70,26 @@ def add_one_sample(data):
             id_ = sample.id
         return id_
     # Need to figure out what exceptions to catch
+    except IntegrityError as e:
+        print(e)
+        abort(409, "SQL Integrity Error - possible duplicate or missing field")
+
+
+def add_one_isolate(data):
+    """Build isolate and associated stock
+    """
+    stock = data.pop("stock")
+    try:
+        with session_scope() as sess:
+            isolate = Isolate(**data)
+            isolate.stocks = [
+                IsolateStock(**stock)
+            ]
+            sess.add(isolate)
+            # Need to flush to get id_
+            sess.flush()
+            id_ = isolate.id
+        return id_
     except IntegrityError as e:
         print(e)
         abort(409, "SQL Integrity Error - possible duplicate or missing field")

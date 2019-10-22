@@ -13,3 +13,4 @@ __pycache__/
 
 # Private and Public Key for authentication
 jwt.key*
+uploads/

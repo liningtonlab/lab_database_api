@@ -137,7 +137,7 @@ class Permit(Base):
     end_date = Column(Date)
     notes = Column(Text)
     file_dir = Column(String(45))
-    file_name = Column(String(45))
+    file_name = Column(String(255))
 
     def __repr__(self):
         return f"<{self.__class__.__name__} id={self.id}>"
@@ -154,8 +154,8 @@ class Isolate(Base):
     __tablename__ = "isolate"
     id = Column(Integer, primary_key=True)
     name = Column(String(45), nullable=False, unique=True)
-    color = Column(String(10))
-    morphology = Column(String(20))
+    color = Column(String(10)) # Unused column...
+    morphology = Column(String(20)) # Unused column...
     sequence = Column(Text)
     sequence_dir = Column(String(45))
     sequence_file = Column(String(45))
@@ -215,7 +215,7 @@ class Extract(Base):
     inoculation_date = Column(Date)
     growth_time_h = Column(Integer)
     volume_ml = Column(Float)
-    mass_g = Column(Float)
+    mass_g = Column(Float) # Unused column...
     seal = Column(String(45))
     percent_inoculum = Column(Float)
     spring = Column(Boolean)

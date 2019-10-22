@@ -42,7 +42,7 @@ class Libraries(Resource):
         if not validate_input(Library, data):
             abort(400, "Invalid JSON input")
         id_ = add_one(Library, data)
-        return {"success": True, "link": f"/api/v1/libraries/{id_}"}, 201
+        return {"success": True, "link": f"/api/v1/libraries/{id_}", "id": id_}, 201
 
     def delete(self, **kwargs):
         return {"message": "Method not implemented"}, 501

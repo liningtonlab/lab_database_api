@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_restful import Api
 from sqlalchemy import create_engine
@@ -6,8 +8,8 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from api.config import app_config
 from api.db import init_db
 from api.resources import (Divers, DiveSites, Extracts, Fractions, Heartbeat,
-                           Isolates, Libraries, MediaEP, Permits, Samples,
-                           SampleTypes, ScreenPlates, Summary)
+                           Isolates, Libraries, MediaEP, Permits, PermitsFile,
+                           Samples, SampleTypes, ScreenPlates, Summary)
 
 
 def create_app(config_name):
@@ -29,6 +31,7 @@ def create_app(config_name):
     api.add_resource(Libraries, '/api/v1/libraries', '/api/v1/libraries/<string:id>')
     api.add_resource(MediaEP, '/api/v1/media', '/api/v1/media/<string:id>')
     api.add_resource(Permits, '/api/v1/permits', '/api/v1/permits/<string:id>')
+    api.add_resource(PermitsFile, '/api/v1/permits/<string:id>/file')
     api.add_resource(Samples, '/api/v1/samples', '/api/v1/samples/<string:id>',
         # Example collection endpoints
         # '/api/v1/samples/<int:id>/<string:collection>/',
@@ -51,5 +54,14 @@ def create_app(config_name):
     @app.errorhandler(500)
     def internal_server_error(e):
         return {"message":str(e)}, 500
+
+    
+    UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(app.root_path, "uploads"))
+
+    @app.before_first_request
+    def init_upload():
+        if not os.path.exists(UPLOAD_DIR):
+            os.mkdir(UPLOAD_DIR)
+
 
     return app
