@@ -210,7 +210,7 @@ def serialize_row(row, embed):
                 else:
                     if key == "fractions":
                         result[key]["embedded"] = [fraction2dict(x) for x in r if x]
-                    if key == "isolates":
+                    elif key == "isolates":
                         result[key]["embedded"] = [isolate2dict(x) for x in r if x]
                     else:
                         result[key]["embedded"] = [row2dict(x) for x in r if x]
