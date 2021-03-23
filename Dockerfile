@@ -6,7 +6,8 @@ COPY ./requirements.txt /app
 RUN apt-get update && apt-get install -y \
     openssh-client \
     && rm -rf /var/lib/apt/lists/*
-RUN ssh-keygen -t rsa -b 4096 -f key.jwt -N ''
+RUN ssh-keygen -t rsa -b 4096 -m PEM -f jwt.key -N '' \
+    && openssl rsa -in jwt.key -pubout -outform PEM -out jwt.key.pub
 
 RUN python3 -m pip install -r requirements.txt
 
